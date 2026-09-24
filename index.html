@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labirin Pengetahuan: Petualangan Biner Multi-Level</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for interactive icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Outfit', 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .font-game {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        .font-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Responsive 16:9 Aspect Ratio Container */
+        .game-aspect {
+            width: 100vw;
+            height: 100vh;
+            max-width: 177.78vh;
+            max-height: 56.25vw;
+            margin: auto;
+        }
+
+        /* Large touch button interactions for Digital Whiteboard */
+        .touch-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .touch-btn:active {
+            transform: scale(0.93) translateY(2px);
+        }
+
+        /* Glowing state effects */
+        .glow-gold {
+            box-shadow: 0 0 22px rgba(251, 191, 36, 0.7);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 22px rgba(6, 182, 212, 0.7);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 22px rgba(16, 185, 129, 0.7);
+        }
+        .glow-rose {
+            box-shadow: 0 0 22px rgba(244, 63, 94, 0.7);
+        }
+
+        /* Bit toggle switch UI */
+        .bit-switch {
+            width: 72px;
+            height: 110px;
+            transition: all 0.2s ease;
+        }
+        .bit-switch.active {
+            background-color: #10B981;
+            box-shadow: 0 0 22px rgba(16, 185, 129, 0.85);
+            border-color: #047857;
+        }
+
+        /* Floating animation for start screen cartoon elements */
+        @keyframes floatRobot {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+        .animate-float-robot {
+            animation: floatRobot 3.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.08); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 4px;
+        }
+
+        #gameCanvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white overflow-hidden flex items-center justify-center min-h-screen">
+
+    <div id="gameContainer" class="game-aspect relative bg-slate-900 border-4 border-slate-700 rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between p-3 sm:p-5">
+
+        <!-- Start Screen / Halaman Depan Overlay -->
+        <div id="startScreen" class="absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col items-center justify-between p-6 sm:p-8 text-center border-4 border-cyan-500/30 rounded-3xl">
+            
+            <!-- Title & Badge Header -->
+            <div class="flex flex-col items-center gap-1 mt-2">
+                <div class="bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 border border-cyan-400/40 px-4 py-1 rounded-full text-cyan-300 text-xs sm:text-sm font-bold tracking-widest uppercase flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-amber-400"></i> Petualangan Logika Biner
+                </div>
+                <h1 class="text-4xl sm:text-6xl font-black font-game bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg tracking-wide">
+                    BINARY LABIRIN
+                </h1>
+                <p class="text-xs sm:text-sm text-slate-300 font-medium max-w-md">
+                    Bantu Bito menjelajahi labirin biner, selesaikan tantangan logika, dan capai garis FINISH!
+                </p>
+            </div>
+
+            <!-- Cartoon Robot Maze Illustration (SVG) -->
+            <div class="relative w-full max-w-md h-48 sm:h-60 flex items-center justify-center my-2">
+                <!-- Background Ambient Glow -->
+                <div class="absolute w-56 h-56 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-glow"></div>
+                <div class="absolute w-44 h-44 bg-amber-500/20 rounded-full blur-2xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+
+                <!-- SVG Illustration -->
+                <svg class="w-full h-full animate-float-robot z-10 filter drop-shadow-2xl" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Maze Circuit Path Background -->
+                    <path d="M 50 150 H 150 V 80 H 280 V 220 H 420 V 150" stroke="#06B6D4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" stroke-dasharray="12 8"/>
+                    <path d="M 80 220 H 200 V 180 H 350 V 90 H 450" stroke="#F59E0B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+
+                    <!-- Floating Binary Bits -->
+                    <text x="70" y="70" fill="#22D3EE" font-size="20" font-family="JetBrains Mono" font-weight="bold" opacity="0.8">01</text>
+                    <text x="380" y="60" fill="#FBBF24" font-size="22" font-family="JetBrains Mono" font-weight="bold" opacity="0.8">101</text>
+                    <text x="410" y="250" fill="#34D399" font-size="20" font-family="JetBrains Mono" font-weight="bold" opacity="0.8">110</text>
+                    <text x="60" y="260" fill="#F43F5E" font-size="18" font-family="JetBrains Mono" font-weight="bold" opacity="0.8">010</text>
+
+                    <!-- Cartoon Robot Character (Bito) in Maze -->
+                    <g transform="translate(195, 60)">
+                        <!-- Robot Antenna -->
+                        <line x1="55" y1="20" x2="55" y2="2" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="55" cy="2" r="7" fill="#F59E0B" class="animate-pulse"/>
+
+                        <!-- Robot Ears/Bolts -->
+                        <rect x="18" y="32" width="8" height="16" rx="3" fill="#64748B"/>
+                        <rect x="84" y="32" width="8" height="16" rx="3" fill="#64748B"/>
+
+                        <!-- Head -->
+                        <rect x="24" y="18" width="62" height="46" rx="14" fill="#0891B2" stroke="#CFFAFE" stroke-width="4"/>
+                        <!-- Visor / Eyes Screen -->
+                        <rect x="32" y="26" width="46" height="26" rx="8" fill="#0F172A"/>
+                        <!-- Animated Glowing Eyes -->
+                        <circle cx="45" cy="39" r="6" fill="#22D3EE"/>
+                        <circle cx="47" cy="37" r="2" fill="#FFFFFF"/>
+                        <circle cx="65" cy="39" r="6" fill="#22D3EE"/>
+                        <circle cx="67" cy="37" r="2" fill="#FFFFFF"/>
+                        <!-- Cute Smile -->
+                        <path d="M 48 46 Q 55 52 62 46" stroke="#22D3EE" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+                        <!-- Neck -->
+                        <rect x="47" y="64" width="16" height="8" fill="#475569"/>
+
+                        <!-- Robot Body -->
+                        <rect x="26" y="72" width="58" height="60" rx="14" fill="#0E7490" stroke="#67E8F9" stroke-width="3"/>
+                        <!-- Core Binary Badge on Chest -->
+                        <rect x="36" y="82" width="38" height="22" rx="6" fill="#155E75"/>
+                        <text x="55" y="97" fill="#38BDF8" font-size="12" font-family="JetBrains Mono" font-weight="bold" text-anchor="middle">1010</text>
+                        <!-- Status Light Dots -->
+                        <circle cx="38" cy="118" r="3.5" fill="#10B981"/>
+                        <circle cx="55" cy="118" r="3.5" fill="#F59E0B"/>
+                        <circle cx="72" cy="118" r="3.5" fill="#EF4444"/>
+
+                        <!-- Cute Cartoon Arms -->
+                        <!-- Left Arm holding Maze Map -->
+                        <path d="M 26 84 Q 10 95 18 115" stroke="#0891B2" stroke-width="8" stroke-linecap="round" fill="none"/>
+                        <!-- Map Scroll -->
+                        <rect x="4" y="110" width="22" height="26" rx="4" fill="#FEF08A" stroke="#CA8A04" stroke-width="2" transform="rotate(-15 4 110)"/>
+                        <line x1="8" y1="118" x2="20" y2="114" stroke="#854D0E" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="10" y1="124" x2="18" y2="121" stroke="#854D0E" stroke-width="2" stroke-linecap="round"/>
+
+                        <!-- Right Arm waving -->
+                        <path d="M 84 84 Q 102 90 98 110" stroke="#0891B2" stroke-width="8" stroke-linecap="round" fill="none"/>
+                        <circle cx="98" cy="112" r="5" fill="#67E8F9"/>
+
+                        <!-- Legs -->
+                        <rect x="36" y="132" width="12" height="22" rx="4" fill="#475569"/>
+                        <rect x="62" y="132" width="12" height="22" rx="4" fill="#475569"/>
+                        <!-- Cute Feet / Wheels -->
+                        <rect x="30" y="150" width="20" height="10" rx="5" fill="#0284C7"/>
+                        <rect x="58" y="150" width="20" height="10" rx="5" fill="#0284C7"/>
+                    </g>
+
+                    <!-- Maze Flag Goal -->
+                    <g transform="translate(390, 110)">
+                        <line x1="10" y1="10" x2="10" y2="70" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="10,12 50,28 10,44" fill="#EF4444"/>
+                        <text x="18" y="32" fill="#FFFFFF" font-size="10" font-family="Outfit" font-weight="bold">FINISH</text>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Start Button & Audio Quick Hint -->
+            <div class="flex flex-col items-center gap-3 mb-2 w-full max-w-sm">
+                <button id="btnStartGame" onclick="startGameFromSplash()" class="touch-btn w-full bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black py-4 px-8 rounded-2xl text-2xl sm:text-3xl shadow-2xl glow-gold flex items-center justify-center gap-3 font-game tracking-wider transition-all transform hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-play text-2xl"></i>
+                    <span>MULAI PERMAINAN</span>
+                </button>
+                <div class="text-xs text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-music text-cyan-400"></i>
+                    <span>Termasuk Musik BGM & Efek Suara Interaktif</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Top Header Status Bar -->
+        <header class="bg-slate-800/90 backdrop-blur border-2 border-slate-700 rounded-2xl px-4 py-2.5 flex items-center justify-between z-10 shadow-lg">
+            <!-- Left: Level Badge & Player Info -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-indigo-600 border-2 border-indigo-400 text-white p-2 px-3 rounded-xl flex items-center gap-2 shadow-inner">
+                    <i class="fa-solid fa-robot text-2xl text-cyan-300"></i>
+                    <div>
+                        <div class="text-[10px] uppercase tracking-wider text-indigo-200 font-bold">Karakter</div>
+                        <div class="text-base font-extrabold text-white leading-none">Bito!</div>
+                    </div>
+                </div>
+
+                <!-- Level Selector Pill -->
+                <button onclick="openLevelSelectModal()" class="touch-btn bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 px-3.5 py-2 rounded-xl border-2 border-amber-300 flex items-center gap-2 shadow font-game">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                    <span id="levelHeaderBadge" class="text-sm sm:text-base font-black">LEVEL 1 / 5</span>
+                    <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+                </button>
+            </div>
+
+            <!-- Title Header -->
+            <div class="hidden lg:flex flex-col items-center">
+                <h1 class="text-lg xl:text-xl font-extrabold font-game bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
+                    LABIRIN PENGETAHUAN: BINER ➔ DESIMAL
+                </h1>
+                <span id="levelSubTitle" class="text-xs text-slate-300 font-semibold">Level 1: Dasar Konversi Biner ke Desimal</span>
+            </div>
+
+            <!-- Right: Timer, Stars, Energy, Audio & Help -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Countdown Timer Badge -->
+                <div class="bg-indigo-950/80 border-2 border-cyan-400/60 px-3 py-1 rounded-xl flex items-center gap-2 shadow glow-cyan">
+                    <i class="fa-solid fa-stopwatch text-cyan-400 text-xl sm:text-2xl animate-pulse"></i>
+                    <div>
+                        <div class="text-[9px] uppercase tracking-wider text-cyan-300 font-bold leading-none">Sisa Waktu</div>
+                        <span id="timerText" class="text-lg sm:text-xl font-black text-cyan-200 font-code leading-tight">01:00</span>
+                    </div>
+                </div>
+
+                <!-- Stars Counter -->
+                <div class="bg-amber-500/20 border-2 border-amber-500/50 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                    <i class="fa-solid fa-star text-amber-400 text-xl sm:text-2xl"></i>
+                    <span id="starCounter" class="text-lg sm:text-xl font-black text-amber-300 font-game">0 / 5</span>
+                </div>
+
+                <!-- Energy Bar -->
+                <div class="bg-rose-500/20 border-2 border-rose-500/50 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+                    <i class="fa-solid fa-heart text-rose-500 text-xl sm:text-2xl animate-pulse"></i>
+                    <span id="energyText" class="text-lg sm:text-xl font-bold text-rose-300 font-game">100%</span>
+                </div>
+
+                <!-- Sound Toggle Button -->
+                <button id="btnSound" onclick="toggleAudio()" class="touch-btn bg-slate-700 hover:bg-slate-600 text-white w-10 h-10 rounded-xl flex items-center justify-center border-2 border-slate-500 text-base shadow">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <!-- Panduan Button -->
+                <button onclick="openTutorialModal()" class="touch-btn bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 border-2 border-cyan-400 font-bold text-xs sm:text-sm shadow">
+                    <i class="fa-solid fa-book-open text-sm"></i>
+                    <span class="hidden sm:inline">Panduan</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Game Area (Canvas Board Map) -->
+        <main class="relative flex-1 my-3 bg-slate-950 rounded-2xl border-2 border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
+            <canvas id="gameCanvas" class="absolute inset-0 w-full h-full"></canvas>
+
+            <!-- On-Screen Notification Banner -->
+            <div id="toastBanner" class="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-900/95 border-2 border-indigo-400 text-cyan-200 font-bold px-6 py-2.5 rounded-2xl shadow-2xl transition-all duration-300 transform -translate-y-20 opacity-0 pointer-events-none flex items-center gap-3 z-20">
+                <i id="toastIcon" class="fa-solid fa-circle-info text-cyan-400 text-xl"></i>
+                <span id="toastMessage" class="text-base">Gunakan D-Pad atau tombol panah keyboard!</span>
+            </div>
+
+            <!-- Touch D-Pad Controls for Digital Whiteboard -->
+            <div class="absolute bottom-4 left-4 z-10 bg-slate-900/85 backdrop-blur border-2 border-slate-700 p-2.5 rounded-2xl flex gap-2 items-center shadow-2xl">
+                <div class="grid grid-cols-3 gap-1.5 w-36 h-36 sm:w-40 sm:h-40">
+                    <div></div>
+                    <button onclick="movePlayer('UP')" class="touch-btn bg-indigo-600 active:bg-indigo-400 text-white rounded-xl flex items-center justify-center text-2xl font-black shadow-lg border-b-4 border-indigo-800">▲</button>
+                    <div></div>
+                    <button onclick="movePlayer('LEFT')" class="touch-btn bg-indigo-600 active:bg-indigo-400 text-white rounded-xl flex items-center justify-center text-2xl font-black shadow-lg border-b-4 border-indigo-800">◄</button>
+                    <button onclick="interactTile()" class="touch-btn bg-amber-500 active:bg-amber-400 text-slate-950 rounded-xl flex items-center justify-center text-xs font-black shadow-lg border-b-4 border-amber-700 leading-tight p-1 text-center font-game">
+                        AKSI
+                    </button>
+                    <button onclick="movePlayer('RIGHT')" class="touch-btn bg-indigo-600 active:bg-indigo-400 text-white rounded-xl flex items-center justify-center text-2xl font-black shadow-lg border-b-4 border-indigo-800">►</button>
+                    <div></div>
+                    <button onclick="movePlayer('DOWN')" class="touch-btn bg-indigo-600 active:bg-indigo-400 text-white rounded-xl flex items-center justify-center text-2xl font-black shadow-lg border-b-4 border-indigo-800">▼</button>
+                    <div></div>
+                </div>
+            </div>
+
+            <!-- Keyboard Guide -->
+            <div class="absolute bottom-4 right-4 z-10 bg-slate-900/80 backdrop-blur border border-slate-700 px-4 py-2 rounded-xl text-xs text-slate-400 font-medium hidden sm:block">
+                <i class="fa-solid fa-keyboard text-cyan-400 mr-1.5 text-sm"></i> Navigasi: <b>Tombol Panah Keyboard</b> / <b>WASD</b>
+            </div>
+        </main>
+
+        <!-- Interactive Checkpoint Modal Container -->
+        <div id="challengeModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-4 border-cyan-500/80 w-full max-w-4xl rounded-3xl p-6 shadow-2xl relative flex flex-col justify-between max-h-[92vh] overflow-y-auto">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div id="modalCPIcon" class="w-12 h-12 bg-cyan-500 text-slate-950 font-black text-2xl rounded-2xl flex items-center justify-center font-game shadow-lg">
+                            1
+                        </div>
+                        <div>
+                            <h2 id="modalTitle" class="text-2xl font-black text-cyan-300 font-game">Tantangan Pos Checkpoint 1</h2>
+                            <p id="modalSubtitle" class="text-sm text-slate-400 font-medium">Selesaikan soal interaktif untuk membuka gerbang labirin!</p>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-900/60 border border-indigo-500/40 px-4 py-2 rounded-xl flex items-center gap-2 text-xs text-indigo-200">
+                        <i class="fa-solid fa-brain text-amber-400 text-lg"></i>
+                        <span id="hintBadgeText"><b>Tantangan Biner</b></span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Challenge Interactive Surface -->
+                <div id="challengeBody" class="my-2 min-h-[270px] flex flex-col justify-center items-center">
+                    <!-- Populated dynamically via JavaScript -->
+                </div>
+
+                <!-- Hint & Feedback Message Box -->
+                <div id="feedbackBox" class="min-h-[52px] my-3 p-3 rounded-2xl bg-slate-800 border border-slate-700 text-center font-semibold text-sm flex items-center justify-center gap-2">
+                    <span class="text-slate-300">Gunakan interaksi di atas untuk menjawab tantangan!</span>
+                </div>
+
+                <!-- Action Buttons Footer -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                    <button onclick="resetCurrentChallenge()" class="touch-btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-3.5 rounded-2xl border border-slate-600 font-bold text-base flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset Soal</span>
+                    </button>
+
+                    <button id="btnSubmitChallenge" onclick="verifyChallengeAnswer()" class="touch-btn bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black px-10 py-4 rounded-2xl text-xl shadow-lg glow-cyan flex items-center gap-3 font-game">
+                        <span>PERIKSA JAWABAN</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Out Modal -->
+        <div id="timeOutModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-4 border-rose-500 w-full max-w-lg rounded-3xl p-8 shadow-2xl text-center relative flex flex-col items-center">
+                <div class="w-20 h-20 bg-rose-500/20 border-4 border-rose-500 rounded-full flex items-center justify-center text-rose-400 text-4xl mb-4 animate-bounce">
+                    <i class="fa-solid fa-hourglass-end"></i>
+                </div>
+                <h2 class="text-3xl font-black font-game text-rose-400 mb-2">WAKTU HABIS! ⌛</h2>
+                <p id="timeOutDesc" class="text-slate-300 text-base mb-6 font-medium">Waktu level telah selesai. Jangan menyerah, ayo coba lagi level ini!</p>
+                
+                <button onclick="restartCurrentLevel()" class="touch-btn bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-xl shadow-xl flex items-center gap-3 font-game">
+                    <i class="fa-solid fa-rotate-right text-2xl"></i>
+                    <span>COBA LAGI LEVEL INI</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Level Select Modal -->
+        <div id="levelSelectModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-4 border-amber-400/80 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative">
+                <button onclick="closeLevelSelectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <h2 class="text-2xl font-black font-game text-amber-300 mb-2 flex items-center gap-3">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    Pilih Level Labirin
+                </h2>
+                <p class="text-sm text-slate-400 mb-6 font-medium">Pilih tingkat kesulitan konversi biner ↔ desimal untuk papan digital:</p>
+
+                <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <div onclick="selectLevel(1)" class="touch-btn bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl border-2 border-slate-600 flex items-center justify-between">
+                        <div>
+                            <span class="text-amber-400 font-black font-game text-lg block">LEVEL 1: Dasar Biner ➔ Desimal (Mudah)</span>
+                            <span class="text-xs text-slate-400 font-medium">Konversi biner 4-bit (8-4-2-1) • ⏱️ Waktu: 60 Detik</span>
+                        </div>
+                        <i class="fa-solid fa-play text-xl text-cyan-400"></i>
+                    </div>
+
+                    <div onclick="selectLevel(2)" class="touch-btn bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl border-2 border-slate-600 flex items-center justify-between">
+                        <div>
+                            <span class="text-amber-400 font-black font-game text-lg block">LEVEL 2: Desimal ➔ Biner (Sedang)</span>
+                            <span class="text-xs text-slate-400 font-medium">Susun bit 0 dan 1 dari target desimal • ⏱️ Waktu: 60 Detik</span>
+                        </div>
+                        <i class="fa-solid fa-play text-xl text-cyan-400"></i>
+                    </div>
+
+                    <div onclick="selectLevel(3)" class="touch-btn bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl border-2 border-slate-600 flex items-center justify-between">
+                        <div>
+                            <span class="text-amber-400 font-black font-game text-lg block">LEVEL 3: 5-Bit & Pasangkan Pasangan (Sedang)</span>
+                            <span class="text-xs text-slate-400 font-medium">Saklar 5-bit (16-8-4-2-1) & Kartu Biner-Desimal • ⏱️ Waktu: 60 Detik</span>
+                        </div>
+                        <i class="fa-solid fa-play text-xl text-cyan-400"></i>
+                    </div>
+
+                    <div onclick="selectLevel(4)" class="touch-btn bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl border-2 border-slate-600 flex items-center justify-between">
+                        <div>
+                            <span class="text-amber-400 font-black font-game text-lg block">LEVEL 4: Isi Bit Hilang (Susah)</span>
+                            <span class="text-xs text-slate-400 font-medium">Lengkapi posisi digit biner yang hilang • ⏱️ Waktu: 90 Detik</span>
+                        </div>
+                        <i class="fa-solid fa-play text-xl text-cyan-400"></i>
+                    </div>
+
+                    <div onclick="selectLevel(5)" class="touch-btn bg-slate-800 hover:bg-slate-700 p-4 rounded-2xl border-2 border-slate-600 flex items-center justify-between">
+                        <div>
+                            <span class="text-amber-400 font-black font-game text-lg block">LEVEL 5: Master Konversi Dua Arah (Sangat Susah)</span>
+                            <span class="text-xs text-slate-400 font-medium">Tantangan campuran konversi cepat Biner ↔ Desimal • ⏱️ Waktu: 120 Detik</span>
+                        </div>
+                        <i class="fa-solid fa-crown text-xl text-amber-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Complete / Victory Modal -->
+        <div id="victoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-4 border-amber-400 w-full max-w-2xl rounded-3xl p-8 shadow-2xl text-center relative flex flex-col items-center">
+                <div class="w-24 h-24 bg-amber-400/20 border-4 border-amber-400 rounded-full flex items-center justify-center text-amber-400 text-5xl mb-4">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 id="victoryTitle" class="text-4xl font-black font-game text-amber-300 mb-2">SELAMAT! LEVEL SELESAI!</h2>
+                <p id="victoryDesc" class="text-slate-300 text-lg mb-6 font-medium">Kamu telah berhasil menguasai tantangan konversi di level ini!</p>
+                
+                <div class="grid grid-cols-2 gap-4 w-full mb-8">
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <span class="text-slate-400 text-xs font-bold block mb-1">BINTANG TERKUMPUL</span>
+                        <span id="finalStars" class="text-3xl font-black text-amber-400 font-game">5 / 5</span>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <span class="text-slate-400 text-xs font-bold block mb-1">SISA ENERGI</span>
+                        <span id="finalEnergy" class="text-3xl font-black text-emerald-400 font-game">100%</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 w-full justify-center">
+                    <button onclick="restartCurrentLevel()" class="touch-btn bg-slate-800 hover:bg-slate-700 text-white font-bold px-6 py-4 rounded-2xl text-lg flex items-center gap-2 border border-slate-600">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Ulang Level Ini</span>
+                    </button>
+                    <button id="btnNextLevel" onclick="proceedNextLevel()" class="touch-btn bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-xl shadow-xl flex items-center gap-3 font-game">
+                        <span>LANJUT LEVEL BERIKUTNYA</span>
+                        <i class="fa-solid fa-arrow-right text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tutorial Modal -->
+        <div id="tutorialModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-2 border-slate-700 w-full max-w-3xl rounded-3xl p-6 shadow-2xl relative">
+                <button onclick="closeTutorialModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <h2 class="text-2xl font-black font-game text-cyan-300 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-amber-400"></i>
+                    Panduan Konversi Biner ↔ Desimal
+                </h2>
+
+                <div class="space-y-4 text-slate-300 text-sm leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <h3 class="font-bold text-white text-base mb-1 text-cyan-300">1. Konversi Biner ke Desimal</h3>
+                        <p>Jumlahkan bobot nilai tempat pada bit bernilai <b>1</b>. Nilai tempat dari kanan ke kiri: <b>16, 8, 4, 2, 1</b>.</p>
+                        <p class="mt-1 text-xs text-amber-300 font-bold">Contoh: Biner 1011<sub>2</sub> = 8 + 0 + 2 + 1 = 11 desimal.</p>
+                    </div>
+
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <h3 class="font-bold text-white text-base mb-1 text-cyan-300">2. Konversi Desimal ke Biner</h3>
+                        <p>Pilihlah kombinasi bobot (16, 8, 4, 2, 1) yang jika dijumlahkan menghasilkan angka desimal target!</p>
+                        <p class="mt-1 text-xs text-emerald-300 font-bold">Contoh: Desimal 13 = 8 + 4 + 1 ➔ Biner 1101<sub>2</sub>.</p>
+                    </div>
+
+                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                        <h3 class="font-bold text-white text-base mb-1 text-cyan-300">3. Waktu & Papan Tulis Digital</h3>
+                        <p>Hitung mundur waktu disesuaikan tingkat kesulitan (<b>Level 1-3: 60s</b>, <b>Level 4: 90s</b>, <b>Level 5: 120s</b>). Menjawab soal dengan benar memberikan bonus <b>+10 detik</b>. Bito baru bisa menyentuh <b>FINISH</b> jika seluruh 5 Checkpoint telah selesai!</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button onclick="closeTutorialModal()" class="touch-btn bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-8 py-3 rounded-2xl text-lg font-game shadow-lg">
+                        MULAILAH PETUALANGAN!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const GRID_COLS = 12;
+        const GRID_ROWS = 8;
+        let canvas, ctx;
+        let currentLevel = 1;
+        let activeLevelConfig = null;
+        let activeChallengeCP = null;
+        let timerInterval = null;
+        let timeLeft = 60;
+        let soundEnabled = true;
+        let bgmPlaying = false;
+        let bgmInterval = null;
+        let bgmNoteIndex = 0;
+        let audioCtx = null;
+        let player = { x: 0, y: 0, stars: 0, energy: 100 };
+
+        function getAudioContext() {
+            try {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        audioCtx = new AudioContextClass();
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                return audioCtx;
+            } catch (e) {
+                console.warn("Gagal menginisialisasi Web Audio Context, mengembalikan ke status audio default:", e);
+                audioCtx = null;
+                return null;
+            }
+        }
+
+        // Auto unlock AudioContext on first user interaction
+        function initAudioUnlock() {
+            const unlockHandler = () => {
+                const c = getAudioContext();
+                if (c && c.state === 'running') {
+                    window.removeEventListener('pointerdown', unlockHandler);
+                    window.removeEventListener('keydown', unlockHandler);
+                    window.removeEventListener('touchstart', unlockHandler);
+                }
+            };
+            window.addEventListener('pointerdown', unlockHandler, { passive: true });
+            window.addEventListener('keydown', unlockHandler, { passive: true });
+            window.addEventListener('touchstart', unlockHandler, { passive: true });
+        }
+
+        /* Procedural Retro Chiptune Background Music (BGM) Generator */
+        const BGM_MELODY = [
+            { freq: 261.63, dur: 0.18 }, // C4
+            { freq: 329.63, dur: 0.18 }, // E4
+            { freq: 392.00, dur: 0.18 }, // G4
+            { freq: 523.25, dur: 0.18 }, // C5
+            { freq: 392.00, dur: 0.18 }, // G4
+            { freq: 329.63, dur: 0.18 }, // E4
+            { freq: 440.00, dur: 0.22 }, // A4
+            { freq: 349.23, dur: 0.22 }, // F4
+            { freq: 293.66, dur: 0.18 }, // D4
+            { freq: 349.23, dur: 0.18 }, // F4
+            { freq: 440.00, dur: 0.18 }, // A4
+            { freq: 587.33, dur: 0.18 }, // D5
+            { freq: 493.88, dur: 0.22 }, // B4
+            { freq: 392.00, dur: 0.22 }  // G4
+        ];
+
+        function startBGM() {
+            if (bgmPlaying || !soundEnabled) return;
+            bgmPlaying = true;
+            bgmNoteIndex = 0;
+
+            if (bgmInterval) clearInterval(bgmInterval);
+
+            bgmInterval = setInterval(() => {
+                if (!soundEnabled || !bgmPlaying) return;
+                const c = getAudioContext();
+                if (!c) return;
+
+                try {
+                    const note = BGM_MELODY[bgmNoteIndex];
+                    const osc = c.createOscillator();
+                    const gain = c.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note.freq, c.currentTime);
+
+                    // Soft background volume
+                    gain.gain.setValueAtTime(0.035, c.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + note.dur + 0.05);
+
+                    osc.connect(gain);
+                    gain.connect(c.destination);
+
+                    osc.start(c.currentTime);
+                    osc.stop(c.currentTime + note.dur + 0.05);
+
+                    bgmNoteIndex = (bgmNoteIndex + 1) % BGM_MELODY.length;
+                } catch(e) {
+                    console.warn("BGM Playback error:", e);
+                }
+            }, 260);
+        }
+
+        function stopBGM() {
+            bgmPlaying = false;
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const c = getAudioContext();
+                if (!c) return;
+
+                const osc = c.createOscillator();
+                const gain = c.createGain();
+                osc.connect(gain);
+                gain.connect(c.destination);
+
+                const now = c.currentTime;
+
+                if (type === 'step') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'star') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    osc.frequency.setValueAtTime(783.99, now + 0.16);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.28);
+                    osc.start(now);
+                    osc.stop(now + 0.28);
+                } else if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.12);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.setValueAtTime(120, now + 0.15);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'timeout') {
+                    const notes = [523.25, 440.00, 349.23, 261.63];
+                    const noteDur = 0.16;
+                    notes.forEach((freq, idx) => {
+                        const noteOsc = c.createOscillator();
+                        const noteGain = c.createGain();
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * noteDur);
+                        noteGain.gain.setValueAtTime(0.25, now + idx * noteDur);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + (idx + 1) * noteDur + 0.05);
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(c.destination);
+                        noteOsc.start(now + idx * noteDur);
+                        noteOsc.stop(now + (idx + 1) * noteDur + 0.05);
+                    });
+                    return;
+                } else if (type === 'toggle') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch(e) {
+                console.warn("Audio playback error, falling back to silent/reset state:", e);
+                audioCtx = null;
+            }
+        }
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const soundIcon = document.getElementById('soundIcon');
+            if (soundEnabled) {
+                soundIcon.className = 'fa-solid fa-volume-high';
+                showToast('Suara & Musik Diaktifkan', 'fa-volume-high');
+                startBGM();
+            } else {
+                soundIcon.className = 'fa-solid fa-volume-xmark';
+                showToast('Suara & Musik Dimatikan', 'fa-volume-xmark');
+                stopBGM();
+            }
+        }
+
+        function startGameFromSplash() {
+            const startScreen = document.getElementById('startScreen');
+            if (startScreen) {
+                startScreen.classList.add('transition-all', 'duration-500', 'opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    startScreen.style.display = 'none';
+                }, 500);
+            }
+            
+            // Resume Audio Context and start BGM
+            getAudioContext();
+            playSound('correct');
+            startBGM();
+
+            // Initialize / Reset Level 1
+            loadLevel(1);
+            showToast('Petualangan Dimulai! Selamat Datang di Binary Labirin!', 'fa-rocket');
+        }
+
+        const LEVEL_CONFIGS = {
+            1: {
+                title: "Level 1: Dasar Konversi Biner ➔ Desimal (Mudah)",
+                timeLimit: 60,
+                grid: [
+                    [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+                    [0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
+                    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+                startPos: { x: 0, y: 0 },
+                finishPos: { x: 11, y: 7 },
+                checkpoints: [
+                    { id: 1, x: 2, y: 0, cleared: false, title: "Gerbang 1: Saklar Biner (4-Bit)" },
+                    { id: 2, x: 8, y: 1, cleared: false, title: "Gerbang 2: Penjumlah Bobot Biner" },
+                    { id: 3, x: 6, y: 3, cleared: false, title: "Gerbang 3: Keypad Desimal" },
+                    { id: 4, x: 2, y: 4, cleared: false, title: "Gerbang 4: Keypad Desimal" },
+                    { id: 5, x: 9, y: 5, cleared: false, title: "Gerbang 5: Master Biner 4-Bit" }
+                ],
+                stars: [
+                    { id: 1, x: 1, y: 0, collected: false },
+                    { id: 2, x: 4, y: 1, collected: false },
+                    { id: 3, x: 3, y: 2, collected: false },
+                    { id: 4, x: 4, y: 4, collected: false },
+                    { id: 5, x: 7, y: 5, collected: false }
+                ]
+            },
+            2: {
+                title: "Level 2: Konversi Desimal ➔ Biner (Sedang)",
+                timeLimit: 60,
+                grid: [
+                    [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]
+                ],
+                startPos: { x: 0, y: 0 },
+                finishPos: { x: 11, y: 7 },
+                checkpoints: [
+                    { id: 1, x: 3, y: 0, cleared: false, title: "Gerbang 1: Bit Builder Desimal" },
+                    { id: 2, x: 5, y: 1, cleared: false, title: "Gerbang 2: Bit Builder Desimal" },
+                    { id: 3, x: 7, y: 3, cleared: false, title: "Gerbang 3: Keypad Bit" },
+                    { id: 4, x: 4, y: 5, cleared: false, title: "Gerbang 4: Bit Builder Desimal" },
+                    { id: 5, x: 6, y: 7, cleared: false, title: "Gerbang 5: Bit Builder Desimal" }
+                ],
+                stars: [
+                    { id: 1, x: 1, y: 0, collected: false },
+                    { id: 2, x: 4, y: 1, collected: false },
+                    { id: 3, x: 3, y: 3, collected: false },
+                    { id: 4, x: 1, y: 5, collected: false },
+                    { id: 5, x: 8, y: 7, collected: false }
+                ]
+            },
+            3: {
+                title: "Level 3: Saklar 5-Bit & Pasangkan Pasangan (Sedang)",
+                timeLimit: 60,
+                grid: [
+                    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+                ],
+                startPos: { x: 0, y: 0 },
+                finishPos: { x: 11, y: 7 },
+                checkpoints: [
+                    { id: 1, x: 2, y: 1, cleared: false, title: "Gerbang 1: Saklar 5-Bit" },
+                    { id: 2, x: 7, y: 2, cleared: false, title: "Gerbang 2: Pasangkan Kartu Biner-Desimal" },
+                    { id: 3, x: 4, y: 4, cleared: false, title: "Gerbang 3: Saklar 5-Bit" },
+                    { id: 4, x: 8, y: 4, cleared: false, title: "Gerbang 4: Keypad Desimal 5-Bit" },
+                    { id: 5, x: 6, y: 6, cleared: false, title: "Gerbang 5: Master 5-Bit" }
+                ],
+                stars: [
+                    { id: 1, x: 1, y: 0, collected: false },
+                    { id: 2, x: 4, y: 1, collected: false },
+                    { id: 3, x: 8, y: 2, collected: false },
+                    { id: 4, x: 2, y: 4, collected: false },
+                    { id: 5, x: 9, y: 6, collected: false }
+                ]
+            },
+            4: {
+                title: "Level 4: Isi Bit Hilang (Fill in the Blanks - Susah)",
+                timeLimit: 90,
+                grid: [
+                    [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                    [0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+                ],
+                startPos: { x: 0, y: 0 },
+                finishPos: { x: 11, y: 7 },
+                checkpoints: [
+                    { id: 1, x: 3, y: 0, cleared: false, title: "Gerbang 1: Bit Hilang" },
+                    { id: 2, x: 4, y: 2, cleared: false, title: "Gerbang 2: Bit Hilang" },
+                    { id: 3, x: 7, y: 2, cleared: false, title: "Gerbang 3: Pasangkan Pasangan Nilai Tempat" },
+                    { id: 4, x: 6, y: 4, cleared: false, title: "Gerbang 4: Bit Hilang" },
+                    { id: 5, x: 3, y: 6, cleared: false, title: "Gerbang 5: Bit Hilang 5-Bit" }
+                ],
+                stars: [
+                    { id: 1, x: 1, y: 0, collected: false },
+                    { id: 2, x: 2, y: 2, collected: false },
+                    { id: 3, x: 1, y: 4, collected: false },
+                    { id: 4, x: 9, y: 4, collected: false },
+                    { id: 5, x: 10, y: 6, collected: false }
+                ]
+            },
+            5: {
+                title: "Level 5: Master Konversi Dua Arah (Sangat Susah)",
+                timeLimit: 120,
+                grid: [
+                    [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+                ],
+                startPos: { x: 0, y: 0 },
+                finishPos: { x: 11, y: 7 },
+                checkpoints: [
+                    { id: 1, x: 2, y: 0, cleared: false, title: "Gerbang 1: Master Biner" },
+                    { id: 2, x: 5, y: 1, cleared: false, title: "Gerbang 2: Bit Builder Desimal" },
+                    { id: 3, x: 5, y: 3, cleared: false, title: "Gerbang 3: Pasangkan Pasangan Master" },
+                    { id: 4, x: 5, y: 5, cleared: false, title: "Gerbang 4: Bit Hilang 5-Bit" },
+                    { id: 5, x: 9, y: 5, cleared: false, title: "Gerbang 5: Tantangan Puncak Desimal" }
+                ],
+                stars: [
+                    { id: 1, x: 1, y: 0, collected: false },
+                    { id: 2, x: 8, y: 1, collected: false },
+                    { id: 3, x: 2, y: 3, collected: false },
+                    { id: 4, x: 2, y: 5, collected: false },
+                    { id: 5, x: 10, y: 5, collected: false }
+                ]
+            }
+        };
+
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    playSound('timeout');
+                    document.getElementById('timeOutModal').classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(Math.max(0, timeLeft) / 60);
+            const seconds = Math.max(0, timeLeft) % 60;
+            const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const timerElem = document.getElementById('timerText');
+            if (timerElem) timerElem.innerText = formatted;
+        }
+
+        function loadLevel(lvlNum) {
+            currentLevel = lvlNum;
+            activeLevelConfig = JSON.parse(JSON.stringify(LEVEL_CONFIGS[lvlNum]));
+            
+            player.x = activeLevelConfig.startPos.x;
+            player.y = activeLevelConfig.startPos.y;
+            player.stars = 0;
+            player.energy = 100;
+
+            timeLeft = activeLevelConfig.timeLimit || 60;
+            updateTimerDisplay();
+            startTimer();
+
+            document.getElementById('levelHeaderBadge').innerText = `LEVEL ${lvlNum} / 5`;
+            document.getElementById('levelSubTitle').innerText = activeLevelConfig.title;
+            document.getElementById('starCounter').innerText = `0 / ${activeLevelConfig.stars.length}`;
+            document.getElementById('energyText').innerText = `100%`;
+
+            renderMap();
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            renderMap();
+        }
+
+        function movePlayer(dir) {
+            let newX = player.x;
+            let newY = player.y;
+
+            if (dir === 'UP') newY--;
+            if (dir === 'DOWN') newY++;
+            if (dir === 'LEFT') newX--;
+            if (dir === 'RIGHT') newX++;
+
+            if (newX < 0 || newX >= GRID_COLS || newY < 0 || newY >= GRID_ROWS) return;
+            if (activeLevelConfig.grid[newY][newX] === 0) return;
+
+            // Finish tile lock
+            if (newX === activeLevelConfig.finishPos.x && newY === activeLevelConfig.finishPos.y) {
+                const allCleared = activeLevelConfig.checkpoints.every(c => c.cleared);
+                if (!allCleared) {
+                    showToast('🛑 Selesaikan semua 5 Checkpoint terlebih dahulu!', 'fa-ban');
+                    playSound('wrong');
+                    return;
+                }
+            }
+
+            // Sequential checkpoint gate lock
+            const cpAtTile = activeLevelConfig.checkpoints.find(cp => cp.x === newX && cp.y === newY);
+            if (cpAtTile && !cpAtTile.cleared) {
+                const prevUncleared = activeLevelConfig.checkpoints.find(c => c.id < cpAtTile.id && !c.cleared);
+                if (prevUncleared) {
+                    showToast(`Selesaikan Checkpoint ${prevUncleared.id} terlebih dahulu!`, 'fa-lock');
+                    playSound('wrong');
+                    return;
+                }
+            }
+
+            player.x = newX;
+            player.y = newY;
+            playSound('step');
+
+            // Collect stars
+            const star = activeLevelConfig.stars.find(s => s.x === player.x && s.y === player.y && !s.collected);
+            if (star) {
+                star.collected = true;
+                player.stars++;
+                document.getElementById('starCounter').innerText = `${player.stars} / ${activeLevelConfig.stars.length}`;
+                playSound('star');
+                showToast('Bintang Dikumpulkan! +1 Star', 'fa-star');
+            }
+
+            if (cpAtTile && !cpAtTile.cleared) {
+                openChallengeModal(cpAtTile);
+            }
+
+            if (player.x === activeLevelConfig.finishPos.x && player.y === activeLevelConfig.finishPos.y) {
+                const allCleared = activeLevelConfig.checkpoints.every(c => c.cleared);
+                if (allCleared) {
+                    stopTimer();
+                    triggerVictory();
+                }
+            }
+
+            renderMap();
+        }
+
+        function interactTile() {
+            const cpAtTile = activeLevelConfig.checkpoints.find(cp => cp.x === player.x && cp.y === player.y);
+            if (cpAtTile) {
+                openChallengeModal(cpAtTile);
+            } else {
+                showToast('Jelajahi jalur labirin menuju Checkpoint!', 'fa-compass');
+            }
+        }
+
+        function renderMap() {
+            if (!ctx || !activeLevelConfig) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cellW = canvas.width / GRID_COLS;
+            const cellH = canvas.height / GRID_ROWS;
+
+            // 1. Draw Grid Path
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const x = c * cellW;
+                    const y = r * cellH;
+
+                    if (activeLevelConfig.grid[r][c] === 1) {
+                        ctx.fillStyle = '#1E293B';
+                        ctx.fillRect(x + 2, y + 2, cellW - 4, cellH - 4);
+                        
+                        ctx.strokeStyle = '#334155';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x + 4, y + 4, cellW - 8, cellH - 8);
+                    } else {
+                        ctx.fillStyle = '#0F172A';
+                        ctx.fillRect(x, y, cellW, cellH);
+                        
+                        ctx.fillStyle = '#1E1B4B';
+                        ctx.beginPath();
+                        ctx.arc(x + cellW/2, y + cellH/2, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // 2. Draw START Tile
+            const startX = activeLevelConfig.startPos.x * cellW;
+            const startY = activeLevelConfig.startPos.y * cellH;
+            ctx.fillStyle = '#065F46';
+            ctx.fillRect(startX + 4, startY + 4, cellW - 8, cellH - 8);
+            ctx.fillStyle = '#A7F3D0';
+            ctx.font = 'bold 14px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('START', startX + cellW / 2, startY + cellH / 2 + 5);
+
+            // 3. Draw FINISH Tile
+            const finX = activeLevelConfig.finishPos.x * cellW;
+            const finY = activeLevelConfig.finishPos.y * cellH;
+            ctx.fillStyle = '#831843';
+            ctx.fillRect(finX + 4, finY + 4, cellW - 8, cellH - 8);
+            ctx.fillStyle = '#FBCFE8';
+            ctx.font = 'bold 14px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('FINISH', finX + cellW / 2, finY + cellH / 2 + 5);
+
+            // 4. Draw Collectible Stars
+            activeLevelConfig.stars.forEach(s => {
+                if (!s.collected) {
+                    const sx = s.x * cellW + cellW / 2;
+                    const sy = s.y * cellH + cellH / 2;
+                    
+                    ctx.fillStyle = '#F59E0B';
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, Math.min(cellW, cellH) * 0.22, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#FEF08A';
+                    ctx.font = 'bold 16px FontAwesome';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('★', sx, sy);
+                }
+            });
+
+            // 5. Draw Checkpoint Gates
+            activeLevelConfig.checkpoints.forEach(cp => {
+                const cx = cp.x * cellW + cellW / 2;
+                const cy = cp.y * cellH + cellH / 2;
+                const radius = Math.min(cellW, cellH) * 0.35;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                
+                if (cp.cleared) {
+                    ctx.fillStyle = '#059669';
+                    ctx.fill();
+                    ctx.strokeStyle = '#34D399';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 16px FontAwesome';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('✓', cx, cy);
+                } else {
+                    ctx.fillStyle = '#2563EB';
+                    ctx.fill();
+                    ctx.strokeStyle = '#60A5FA';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 16px Outfit';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`CP ${cp.id}`, cx, cy);
+                }
+            });
+
+            // 6. Draw Player Character Avatar (Bito)
+            const px = player.x * cellW + cellW / 2;
+            const py = player.y * cellH + cellH / 2;
+
+            ctx.fillStyle = '#06B6D4';
+            ctx.beginPath();
+            ctx.arc(px, py, Math.min(cellW, cellH) * 0.32, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#CFFAFE';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Avatar Eyes
+            ctx.fillStyle = '#0F172A';
+            ctx.beginPath();
+            ctx.arc(px - 6, py - 4, 4, 0, Math.PI * 2);
+            ctx.arc(px + 6, py - 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Antenna Glow
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.arc(px, py - Math.min(cellW, cellH) * 0.36, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function openChallengeModal(cp) {
+            activeChallengeCP = cp;
+            document.getElementById('modalCPIcon').innerText = cp.id;
+            document.getElementById('modalTitle').innerText = cp.title;
+            document.getElementById('challengeModal').classList.remove('hidden');
+
+            renderChallengeType(currentLevel, cp.id);
+        }
+
+        function closeChallengeModal() {
+            document.getElementById('challengeModal').classList.add('hidden');
+        }
+
+        let currentChallengeData = {};
+
+        function generateQuestionData(lvl, cpId, excludeTarget = null) {
+            function pickDifferent(arr, current) {
+                const filtered = arr.filter(item => JSON.stringify(item) !== JSON.stringify(current));
+                if (filtered.length === 0) return arr[0];
+                return filtered[Math.floor(Math.random() * filtered.length)];
+            }
+
+            if (lvl === 1) {
+                if (cpId === 1) {
+                    const target = pickDifferent([10, 6, 9, 12, 13, 14, 15], excludeTarget);
+                    return { type: 'SWITCHES', target: target, bits: [0, 0, 0, 0], weights: [8, 4, 2, 1] };
+                } else if (cpId === 2) {
+                    const pool = [
+                        { biner: "0101", target: 5 },
+                        { biner: "0111", target: 7 },
+                        { biner: "1001", target: 9 },
+                        { biner: "1011", target: 11 },
+                        { biner: "1101", target: 13 }
+                    ];
+                    const choice = pickDifferent(pool, excludeTarget);
+                    return { type: 'WEIGHT_ADDER', binerStr: choice.biner, targetDecimal: choice.target, userSum: 0 };
+                } else if (cpId === 3 || cpId === 4) {
+                    const pool = [
+                        { biner: "1100", target: 12 },
+                        { biner: "1001", target: 9 },
+                        { biner: "0111", target: 7 },
+                        { biner: "1110", target: 14 }
+                    ];
+                    const choice = pickDifferent(pool, excludeTarget);
+                    return { type: 'KEYPAD', binaryStr: choice.biner, targetDecimal: choice.target, userInput: "" };
+                } else if (cpId === 5) {
+                    const target = pickDifferent([14, 11, 13, 7, 15], excludeTarget);
+                    return { type: 'SWITCHES', target: target, bits: [0, 0, 0, 0], weights: [8, 4, 2, 1] };
+                }
+            } else if (lvl === 2) {
+                if (cpId === 1 || cpId === 2 || cpId === 4 || cpId === 5) {
+                    const target = pickDifferent([9, 7, 10, 12, 14, 13, 11, 15], excludeTarget);
+                    return { type: 'BUILD_BIT', targetDecimal: target, bits: [0, 0, 0, 0], weights: [8, 4, 2, 1] };
+                } else if (cpId === 3) {
+                    const pool = [
+                        { dec: 15, bin: "1111" },
+                        { dec: 11, bin: "1011" },
+                        { dec: 9, bin: "1001" },
+                        { dec: 14, bin: "1110" }
+                    ];
+                    const choice = pickDifferent(pool, excludeTarget);
+                    return { type: 'BIT_KEYPAD', targetDecimal: choice.dec, userInput: "", targetBinary: choice.bin };
+                }
+            } else if (lvl === 3) {
+                if (cpId === 1 || cpId === 3) {
+                    const target = pickDifferent([19, 18, 21, 22, 26, 25, 23, 27], excludeTarget);
+                    return { type: 'SWITCHES', target: target, bits: [0, 0, 0, 0, 0], weights: [16, 8, 4, 2, 1] };
+                } else if (cpId === 2) {
+                    const poolSets = [
+                        {
+                            pairs: [{ biner: "10001", target: 17, selectedVal: null }, { biner: "01100", target: 12, selectedVal: null }, { biner: "10100", target: 20, selectedVal: null }],
+                            options: [20, 17, 12]
+                        }
+                    ];
+                    return { type: 'MATCHING', ...pickDifferent(poolSets, excludeTarget) };
+                } else if (cpId === 4) {
+                    const pool = [{ bin: "10101", dec: 21 }, { bin: "11001", dec: 25 }, { bin: "10110", dec: 22 }];
+                    const choice = pickDifferent(pool, excludeTarget);
+                    return { type: 'KEYPAD', binaryStr: choice.bin, targetDecimal: choice.dec, userInput: "" };
+                } else if (cpId === 5) {
+                    const target = pickDifferent([29, 27, 30, 31], excludeTarget);
+                    return { type: 'BUILD_BIT', targetDecimal: target, bits: [0, 0, 0, 0, 0], weights: [16, 8, 4, 2, 1] };
+                }
+            } else if (lvl === 4) {
+                if (cpId === 1 || cpId === 2 || cpId === 4 || cpId === 5) {
+                    const pool = [
+                        { displayStr: "1 _ 0 1", targetDecimal: 13, missingBit: 1 },
+                        { displayStr: "1 0 _ 1", targetDecimal: 11, missingBit: 1 },
+                        { displayStr: "1 _ 1 0", targetDecimal: 14, missingBit: 1 },
+                        { displayStr: "1 0 _ 0", targetDecimal: 8, missingBit: 0 }
+                    ];
+                    return { type: 'FILL_BLANK', userVal: null, ...pickDifferent(pool, excludeTarget) };
+                } else if (cpId === 3) {
+                    const poolSets = [
+                        {
+                            pairs: [{ biner: "1010", target: 10, selectedVal: null }, { biner: "1110", target: 14, selectedVal: null }, { biner: "0111", target: 7, selectedVal: null }],
+                            options: [14, 7, 10]
+                        }
+                    ];
+                    return { type: 'MATCHING', ...pickDifferent(poolSets, excludeTarget) };
+                }
+            } else if (lvl === 5) {
+                if (cpId === 1) {
+                    const pool = [{ bin: "11101", dec: 29 }, { bin: "11011", dec: 27 }, { bin: "10111", dec: 23 }];
+                    const choice = pickDifferent(pool, excludeTarget);
+                    return { type: 'KEYPAD', binaryStr: choice.bin, targetDecimal: choice.dec, userInput: "" };
+                } else if (cpId === 2 || cpId === 5) {
+                    const target = pickDifferent([27, 23, 29, 31], excludeTarget);
+                    return { type: 'BUILD_BIT', targetDecimal: target, bits: [0, 0, 0, 0, 0], weights: [16, 8, 4, 2, 1] };
+                } else if (cpId === 3) {
+                    const poolSets = [
+                        {
+                            pairs: [{ biner: "11001", target: 25, selectedVal: null }, { biner: "10111", target: 23, selectedVal: null }, { biner: "11110", target: 30, selectedVal: null }],
+                            options: [30, 25, 23]
+                        }
+                    ];
+                    return { type: 'MATCHING', ...pickDifferent(poolSets, excludeTarget) };
+                } else if (cpId === 4) {
+                    const pool = [{ displayStr: "1 1 _ 1 0", targetDecimal: 30, missingBit: 1 }];
+                    return { type: 'FILL_BLANK', userVal: null, ...pickDifferent(pool, excludeTarget) };
+                }
+            }
+
+            return { type: 'SWITCHES', target: 10, bits: [0, 0, 0, 0], weights: [8, 4, 2, 1] };
+        }
+
+        function renderChallengeType(lvl, cpId) {
+            const body = document.getElementById('challengeBody');
+            const feedback = document.getElementById('feedbackBox');
+            feedback.className = "min-h-[52px] my-3 p-3 rounded-2xl bg-slate-800 border border-slate-700 text-center font-semibold text-sm flex items-center justify-center gap-2 text-slate-300";
+            feedback.innerHTML = "<span>Gunakan interaksi di bawah ini untuk mencari jawaban yang tepat!</span>";
+
+            body.innerHTML = '';
+            currentChallengeData = generateQuestionData(lvl, cpId);
+
+            if (currentChallengeData.type === 'SWITCHES') {
+                renderSwitchChallenge(currentChallengeData);
+            } else if (currentChallengeData.type === 'BUILD_BIT') {
+                renderBitBuilderChallenge(currentChallengeData.targetDecimal, currentChallengeData.weights.length);
+            } else if (currentChallengeData.type === 'WEIGHT_ADDER') {
+                renderWeightAdderChallenge(currentChallengeData.binerStr, [8, 4, 2, 1]);
+            } else if (currentChallengeData.type === 'KEYPAD') {
+                renderKeypadChallenge(currentChallengeData.binaryStr);
+            } else if (currentChallengeData.type === 'BIT_KEYPAD') {
+                renderBitKeypadChallenge(currentChallengeData.targetDecimal);
+            } else if (currentChallengeData.type === 'MATCHING') {
+                renderMatchingChallenge();
+            } else if (currentChallengeData.type === 'FILL_BLANK') {
+                renderFillBlankChallenge(currentChallengeData.displayStr, currentChallengeData.targetDecimal);
+            }
+        }
+
+        function renderSwitchChallenge(data) {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">TARGET DESIMAL:</div>
+                    <div class="text-5xl font-black font-game text-amber-400 my-1">${data.target}</div>
+                    <p class="text-xs text-slate-300">Nyalakan saklar bit (1) untuk membentuk angka desimal ${data.target}!</p>
+                </div>
+
+                <div class="flex gap-3 sm:gap-5 justify-center items-center my-4">
+                    ${data.weights.map((w, idx) => `
+                        <div class="flex flex-col items-center gap-2">
+                            <button id="bitBtn_${idx}" onclick="toggleBitSwitch(${idx})" class="bit-switch touch-btn bg-slate-800 border-4 border-slate-600 rounded-2xl flex flex-col items-center justify-center text-3xl font-black text-slate-400 font-code shadow-xl">
+                                0
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderBitBuilderChallenge(targetDec, numBits) {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-3">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">DESIMAL TARGET KANAN ➔ BINER:</div>
+                    <div class="text-5xl font-black font-game text-amber-400 my-1">${targetDec}</div>
+                    <p class="text-xs text-slate-300">Nyalakan bit 1 di posisi yang tepat untuk membentuk desimal ${targetDec}!</p>
+                </div>
+
+                <div class="flex gap-3 sm:gap-4 justify-center items-center my-4">
+                    ${currentChallengeData.weights.map((w, idx) => `
+                        <div class="flex flex-col items-center gap-1.5">
+                            <button id="bitBtn_${idx}" onclick="toggleBitSwitch(${idx})" class="bit-switch touch-btn bg-slate-800 border-4 border-slate-600 rounded-2xl flex flex-col items-center justify-center text-3xl font-black text-slate-400 font-code shadow-xl">
+                                0
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderWeightAdderChallenge(binerStr, weights) {
+            const body = document.getElementById('challengeBody');
+            const bits = binerStr.split('');
+            body.innerHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">HITUNG HASIL DESIMAL DARI BINER BERIKUT:</div>
+                    <div class="flex justify-center items-center gap-3 my-2">
+                        ${bits.map((bit, idx) => `
+                            <div class="flex flex-col items-center bg-slate-800 p-2.5 rounded-2xl border-2 ${bit === '1' ? 'border-emerald-500 bg-emerald-950/40' : 'border-slate-700'} w-14 sm:w-16">
+                                <span class="text-[10px] font-bold text-amber-400 font-code">Bobot ${weights[idx]}</span>
+                                <span class="text-2xl sm:text-3xl font-black font-code ${bit === '1' ? 'text-emerald-400' : 'text-slate-500'}">${bit}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <p class="text-xs text-slate-300">Jumlahkan bobot bit bernilai <b>1</b>, lalu ketik jawabannya!</p>
+                </div>
+
+                <div class="flex flex-col items-center my-2">
+                    <div class="bg-slate-950 px-6 py-2 rounded-2xl border-2 border-cyan-500/60 mb-3 min-w-[160px] text-center">
+                        <span id="keypadInputDisplay" class="text-3xl font-black text-cyan-300 font-code">${currentChallengeData.userInput || "-"}</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full max-w-xs">
+                        ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `
+                            <button onclick="pressKeypad(${n})" class="touch-btn bg-slate-800 hover:bg-slate-700 text-white font-black text-xl py-2 rounded-xl border border-slate-600 shadow">${n}</button>
+                        `).join('')}
+                        <button onclick="clearKeypad()" class="touch-btn bg-rose-800 hover:bg-rose-700 text-white font-bold text-xs py-2 rounded-xl border border-rose-600 shadow">CLEAR</button>
+                        <button onclick="pressKeypad(0)" class="touch-btn bg-slate-800 hover:bg-slate-700 text-white font-black text-xl py-2 rounded-xl border border-slate-600 shadow">0</button>
+                        <button onclick="backspaceKeypad()" class="touch-btn bg-amber-700 hover:bg-amber-600 text-white font-bold text-xs py-2 rounded-xl border border-amber-500 shadow"><i class="fa-solid fa-backspace"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderKeypadChallenge(binaryStr) {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">KONVERSI BINER KE DESIMAL:</div>
+                    <div class="text-4xl sm:text-5xl font-black font-code text-cyan-300 my-1">${binaryStr}<sub>2</sub></div>
+                    <p class="text-xs text-slate-300">Masukkan nilai desimal hasil konversi biner di atas!</p>
+                </div>
+
+                <div class="flex flex-col items-center my-2">
+                    <div class="bg-slate-950 px-6 py-2 rounded-2xl border-2 border-amber-500/60 mb-3 min-w-[160px] text-center">
+                        <span id="keypadInputDisplay" class="text-3xl font-black text-amber-300 font-code">${currentChallengeData.userInput || "-"}</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 w-full max-w-xs">
+                        ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `
+                            <button onclick="pressKeypad(${n})" class="touch-btn bg-slate-800 hover:bg-slate-700 text-white font-black text-xl py-2 rounded-xl border border-slate-600 shadow">${n}</button>
+                        `).join('')}
+                        <button onclick="clearKeypad()" class="touch-btn bg-rose-800 hover:bg-rose-700 text-white font-bold text-xs py-2 rounded-xl border border-rose-600 shadow">CLEAR</button>
+                        <button onclick="pressKeypad(0)" class="touch-btn bg-slate-800 hover:bg-slate-700 text-white font-black text-xl py-2 rounded-xl border border-slate-600 shadow">0</button>
+                        <button onclick="backspaceKeypad()" class="touch-btn bg-amber-700 hover:bg-amber-600 text-white font-bold text-xs py-2 rounded-xl border border-amber-500 shadow"><i class="fa-solid fa-backspace"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBitKeypadChallenge(targetDecimal) {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">KONVERSI DESIMAL KE BINER (4-BIT):</div>
+                    <div class="text-5xl font-black font-game text-amber-400 my-1">${targetDecimal}<sub>10</sub></div>
+                    <p class="text-xs text-slate-300">Ketik urutan 4 digit bit biner (0 dan 1) untuk angka ${targetDecimal}!</p>
+                </div>
+
+                <div class="flex flex-col items-center my-3">
+                    <div class="bg-slate-950 px-8 py-2.5 rounded-2xl border-2 border-emerald-500/60 mb-4 min-w-[180px] text-center">
+                        <span id="bitKeypadDisplay" class="text-4xl font-black text-emerald-300 font-code tracking-widest">${(currentChallengeData.userInput || "").padEnd(4, '_')}</span>
+                    </div>
+
+                    <div class="flex gap-3 justify-center items-center w-full max-w-xs">
+                        <button onclick="pressBitKeypad('1')" class="touch-btn bg-emerald-600 hover:bg-emerald-500 text-white font-black text-3xl w-20 h-16 rounded-2xl border-b-4 border-emerald-800 flex items-center justify-center shadow-lg">1</button>
+                        <button onclick="pressBitKeypad('0')" class="touch-btn bg-slate-700 hover:bg-slate-600 text-white font-black text-3xl w-20 h-16 rounded-2xl border-b-4 border-slate-900 flex items-center justify-center shadow-lg">0</button>
+                        <button onclick="backspaceBitKeypad()" class="touch-btn bg-amber-600 hover:bg-amber-500 text-white font-black text-xl w-16 h-16 rounded-2xl border-b-4 border-amber-800 flex items-center justify-center shadow-lg"><i class="fa-solid fa-backspace"></i></button>
+                        <button onclick="clearBitKeypad()" class="touch-btn bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs w-16 h-16 rounded-2xl border-b-4 border-rose-900 flex items-center justify-center shadow-lg">C</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMatchingChallenge() {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-2">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">PASANGKAN NILAI BINER & DESIMAL:</div>
+                    <p class="text-xs text-slate-300">Pilih opsi angka di bawah untuk mengisi pasangan biner secara berurutan!</p>
+                </div>
+
+                <div class="space-y-2.5 w-full max-w-md mx-auto my-2">
+                    ${currentChallengeData.pairs.map((p, idx) => `
+                        <div class="flex items-center justify-between bg-slate-800 p-3 rounded-2xl border border-slate-700">
+                            <span class="font-code text-cyan-300 font-bold text-xl sm:text-2xl">${p.biner}<sub>2</sub></span>
+                            <i class="fa-solid fa-arrow-right text-slate-500"></i>
+                            <div id="matchDrop_${idx}" class="w-20 h-11 bg-slate-950 border-2 border-amber-400/80 rounded-xl flex items-center justify-center text-amber-300 font-bold text-xl font-game shadow-inner">
+                                ${p.selectedVal !== null ? p.selectedVal : '?'}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="flex items-center justify-center gap-2 mt-3 flex-wrap">
+                    <span class="text-xs text-slate-400 font-bold mr-1">OPSI:</span>
+                    ${currentChallengeData.options.map(opt => `
+                        <button onclick="selectMatchOption(${opt})" class="touch-btn bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black px-4 py-2 rounded-xl text-lg font-game shadow border border-amber-300">
+                            ${opt}
+                        </button>
+                    `).join('')}
+                    <button onclick="resetMatching()" class="touch-btn bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold px-3 py-2 rounded-xl text-xs border border-slate-500 shadow ml-2">
+                        Reset
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderFillBlankChallenge(displayStr, targetDec) {
+            const body = document.getElementById('challengeBody');
+            body.innerHTML = `
+                <div class="text-center mb-3">
+                    <div class="text-slate-400 font-bold text-xs uppercase tracking-wider">TENTUKAN BIT YANG HILANG:</div>
+                    <div class="text-4xl font-black font-code text-cyan-300 tracking-widest my-1">${displayStr}<sub>2</sub> = ${targetDec}</div>
+                    <p class="text-xs text-slate-300">Pilih angka digit bit (0 atau 1) yang membuat persamaan di atas bernilai benar!</p>
+                </div>
+
+                <div class="flex items-center justify-center gap-4 my-4">
+                    <button onclick="selectBlankBit(1)" class="touch-btn bg-emerald-600 hover:bg-emerald-500 text-white font-black text-4xl w-24 h-24 rounded-2xl shadow border-b-4 border-emerald-800 flex items-center justify-center">
+                        1
+                    </button>
+                    <button onclick="selectBlankBit(0)" class="touch-btn bg-slate-700 hover:bg-slate-600 text-white font-black text-4xl w-24 h-24 rounded-2xl shadow border-b-4 border-slate-900 flex items-center justify-center">
+                        0
+                    </button>
+                </div>
+
+                <div class="bg-slate-950 px-6 py-2.5 rounded-2xl border border-slate-800 text-center">
+                    <span class="text-xs text-slate-400 font-bold">BIT TERPILIH: </span>
+                    <span id="fillBlankDisplay" class="text-3xl font-black text-amber-400 font-code">${currentChallengeData.userVal !== null ? currentChallengeData.userVal : '-'}</span>
+                </div>
+            `;
+        }
+
+        function toggleBitSwitch(idx) {
+            playSound('toggle');
+            currentChallengeData.bits[idx] = currentChallengeData.bits[idx] === 0 ? 1 : 0;
+            const btn = document.getElementById(`bitBtn_${idx}`);
+            btn.innerText = currentChallengeData.bits[idx];
+            if (currentChallengeData.bits[idx] === 1) {
+                btn.classList.add('active', 'text-white');
+            } else {
+                btn.classList.remove('active', 'text-white');
+            }
+
+            const total = currentChallengeData.bits.reduce((sum, b, i) => sum + (b * currentChallengeData.weights[i]), 0);
+            const sumDisplay = document.getElementById('switchTotalSum');
+            if (sumDisplay) sumDisplay.innerText = total;
+        }
+
+        function addWeight(w) {
+            playSound('toggle');
+            currentChallengeData.userSum += w;
+            document.getElementById('weightSumDisplay').innerText = currentChallengeData.userSum;
+        }
+
+        function pressKeypad(num) {
+            playSound('toggle');
+            if (!currentChallengeData.userInput) currentChallengeData.userInput = "";
+            currentChallengeData.userInput += num.toString();
+            const elem = document.getElementById('keypadInputDisplay') || document.getElementById('weightSumDisplay');
+            if (elem) elem.innerText = currentChallengeData.userInput;
+        }
+        function clearKeypad() {
+            playSound('toggle');
+            currentChallengeData.userInput = "";
+            const elem = document.getElementById('keypadInputDisplay') || document.getElementById('weightSumDisplay');
+            if (elem) elem.innerText = "-";
+        }
+        function backspaceKeypad() {
+            playSound('toggle');
+            if (currentChallengeData.userInput) {
+                currentChallengeData.userInput = currentChallengeData.userInput.slice(0, -1);
+            }
+            const elem = document.getElementById('keypadInputDisplay') || document.getElementById('weightSumDisplay');
+            if (elem) elem.innerText = currentChallengeData.userInput || "-";
+        }
+
+        function pressBitKeypad(char) {
+            playSound('toggle');
+            if (!currentChallengeData.userInput) currentChallengeData.userInput = "";
+            if (currentChallengeData.userInput.length < 4) {
+                currentChallengeData.userInput += char;
+                const elem = document.getElementById('bitKeypadDisplay');
+                if (elem) elem.innerText = currentChallengeData.userInput.padEnd(4, '_');
+            }
+        }
+        function clearBitKeypad() {
+            playSound('toggle');
+            currentChallengeData.userInput = "";
+            const elem = document.getElementById('bitKeypadDisplay');
+            if (elem) elem.innerText = "____";
+        }
+        function backspaceBitKeypad() {
+            playSound('toggle');
+            if (currentChallengeData.userInput) {
+                currentChallengeData.userInput = currentChallengeData.userInput.slice(0, -1);
+            }
+            const elem = document.getElementById('bitKeypadDisplay');
+            if (elem) elem.innerText = (currentChallengeData.userInput || "").padEnd(4, '_');
+        }
+
+        function selectMatchOption(val) {
+            playSound('toggle');
+            const emptyPairIdx = currentChallengeData.pairs.findIndex(p => p.selectedVal === null);
+            if (emptyPairIdx !== -1) {
+                currentChallengeData.pairs[emptyPairIdx].selectedVal = val;
+                const elem = document.getElementById(`matchDrop_${emptyPairIdx}`);
+                if (elem) elem.innerText = val;
+            }
+        }
+        function resetMatching() {
+            playSound('toggle');
+            if (currentChallengeData.pairs) {
+                currentChallengeData.pairs.forEach((p, idx) => {
+                    p.selectedVal = null;
+                    const elem = document.getElementById(`matchDrop_${idx}`);
+                    if (elem) elem.innerText = '?';
+                });
+            }
+        }
+
+        function selectBlankBit(val) {
+            playSound('toggle');
+            currentChallengeData.userVal = val;
+            const elem = document.getElementById('fillBlankDisplay');
+            if (elem) elem.innerText = val;
+        }
+
+        function resetCurrentChallenge() {
+            playSound('toggle');
+            renderChallengeType(currentLevel, activeChallengeCP.id);
+        }
+
+        function verifyChallengeAnswer() {
+            const feedback = document.getElementById('feedbackBox');
+            let isCorrect = false;
+
+            if (currentChallengeData.type === 'SWITCHES' || currentChallengeData.type === 'BUILD_BIT') {
+                const total = currentChallengeData.bits.reduce((sum, b, i) => sum + (b * currentChallengeData.weights[i]), 0);
+                if (total === (currentChallengeData.target || currentChallengeData.targetDecimal)) isCorrect = true;
+            } else if (currentChallengeData.type === 'WEIGHT_ADDER') {
+                if (parseInt(currentChallengeData.userInput) === currentChallengeData.targetDecimal) isCorrect = true;
+            } else if (currentChallengeData.type === 'KEYPAD') {
+                if (parseInt(currentChallengeData.userInput) === currentChallengeData.targetDecimal) isCorrect = true;
+            } else if (currentChallengeData.type === 'BIT_KEYPAD') {
+                if (currentChallengeData.userInput === currentChallengeData.targetBinary) isCorrect = true;
+            } else if (currentChallengeData.type === 'MATCHING') {
+                const allCorrect = currentChallengeData.pairs.every(p => p.selectedVal === p.target);
+                if (allCorrect) isCorrect = true;
+            } else if (currentChallengeData.type === 'FILL_BLANK') {
+                if (currentChallengeData.userVal === currentChallengeData.missingBit) isCorrect = true;
+            }
+
+            if (isCorrect) {
+                playSound('correct');
+                
+                timeLeft += 10;
+                updateTimerDisplay();
+
+                feedback.className = "min-h-[52px] my-3 p-3 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-300 text-center font-bold text-base flex items-center justify-center gap-2";
+                feedback.innerHTML = "<i class='fa-solid fa-circle-check text-2xl text-emerald-400'></i><span>HEBAT! Jawaban Tepat! Bonus +10 Detik Waktu Tambahan! Gerbang Terbuka!</span>";
+
+                activeChallengeCP.cleared = true;
+                
+                setTimeout(() => {
+                    closeChallengeModal();
+                    renderMap();
+                    showToast(`Gerbang Checkpoint ${activeChallengeCP.id} Terbuka! +10 Detik Bonus Waktu!`, 'fa-clock');
+                }, 1200);
+            } else {
+                playSound('wrong');
+                
+                player.energy = Math.max(0, player.energy - 10);
+                if (player.stars > 0) {
+                    player.stars--;
+                    document.getElementById('starCounter').innerText = `${player.stars} / ${activeLevelConfig.stars.length}`;
+                }
+                document.getElementById('energyText').innerText = `${player.energy}%`;
+
+                feedback.className = "min-h-[52px] my-3 p-3 rounded-2xl bg-rose-950 border border-rose-500 text-rose-300 text-center font-bold text-sm flex items-center justify-center gap-2";
+                feedback.innerHTML = "<i class='fa-solid fa-triangle-exclamation text-xl text-rose-400'></i><span>Jawaban salah! Bintang / Energi berkurang 1. Soal disiapkan ulang!</span>";
+
+                setTimeout(() => {
+                    const prevData = currentChallengeData;
+                    currentChallengeData = generateQuestionData(currentLevel, activeChallengeCP.id, prevData);
+                    
+                    renderChallengeType(currentLevel, activeChallengeCP.id);
+
+                    feedback.className = "min-h-[52px] my-3 p-3 rounded-2xl bg-slate-800 border border-slate-700 text-center font-semibold text-sm flex items-center justify-center gap-2 text-slate-300";
+                    feedback.innerHTML = "<span>Soal baru disiapkan! Gunakan interaksi di atas untuk menjawab tantangan!</span>";
+                }, 1500);
+            }
+        }
+
+        function triggerVictory() {
+            playSound('star');
+            document.getElementById('finalStars').innerText = `${player.stars} / ${activeLevelConfig.stars.length}`;
+            document.getElementById('finalEnergy').innerText = `${player.energy}%`;
+            
+            if (currentLevel < 5) {
+                document.getElementById('victoryTitle').innerText = `LEVEL ${currentLevel} SELESAI!`;
+                document.getElementById('victoryDesc').innerText = `Hebat! Siap untuk tantangan di Level ${currentLevel + 1}?`;
+                document.getElementById('btnNextLevel').classList.remove('hidden');
+            } else {
+                document.getElementById('victoryTitle').innerText = `SELAMAT! KAMU MASTER BINER!`;
+                document.getElementById('victoryDesc').innerText = `Kamu telah menuntaskan seluruh 5 Level Labirin Pengetahuan Biner!`;
+                document.getElementById('btnNextLevel').classList.add('hidden');
+            }
+
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        function restartCurrentLevel() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            document.getElementById('timeOutModal').classList.add('hidden');
+            loadLevel(currentLevel);
+            showToast(`Level ${currentLevel} Direset! Waktu Dimulai Kembali.`, 'fa-rotate-right');
+        }
+
+        function proceedNextLevel() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            if (currentLevel < 5) {
+                loadLevel(currentLevel + 1);
+                showToast(`Memulai Level ${currentLevel}!`, 'fa-play');
+            }
+        }
+
+        function openLevelSelectModal() {
+            document.getElementById('levelSelectModal').classList.remove('hidden');
+        }
+
+        function closeLevelSelectModal() {
+            document.getElementById('levelSelectModal').classList.add('hidden');
+        }
+
+        function selectLevel(lvlNum) {
+            closeLevelSelectModal();
+            loadLevel(lvlNum);
+            showToast(`Beralih ke Level ${lvlNum}`, 'fa-layer-group');
+        }
+
+        function openTutorialModal() {
+            document.getElementById('tutorialModal').classList.remove('hidden');
+        }
+
+        function closeTutorialModal() {
+            document.getElementById('tutorialModal').classList.add('hidden');
+        }
+
+        let toastTimeout = null;
+        function showToast(msg, icon = 'fa-info-circle') {
+            const toast = document.getElementById('toastBanner');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = msg;
+            toastIcon.className = `fa-solid ${icon} text-cyan-400 text-xl`;
+
+            toast.classList.remove('-translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('-translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        function handleKeyPress(e) {
+            if (['ArrowUp', 'KeyW'].includes(e.code)) {
+                e.preventDefault();
+                movePlayer('UP');
+            } else if (['ArrowDown', 'KeyS'].includes(e.code)) {
+                e.preventDefault();
+                movePlayer('DOWN');
+            } else if (['ArrowLeft', 'KeyA'].includes(e.code)) {
+                e.preventDefault();
+                movePlayer('LEFT');
+            } else if (['ArrowRight', 'KeyD'].includes(e.code)) {
+                e.preventDefault();
+                movePlayer('RIGHT');
+            } else if (['Space', 'Enter'].includes(e.code)) {
+                e.preventDefault();
+                interactTile();
+            }
+        }
+
+        window.onload = function() {
+            canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
+            initAudioUnlock();
+            window.addEventListener('keydown', handleKeyPress);
+            
+            // Initialize canvas size and render standby map behind start screen
+            if (canvas) {
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+            }
+            loadLevel(1);
+        };
+    </script>
+</body>
+</html>
